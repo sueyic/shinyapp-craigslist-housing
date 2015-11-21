@@ -31,8 +31,8 @@ shinyUI(fluidPage(
                              ),
                     
             conditionalPanel(condition = "input.location != 'all'",
-                             plotOutput('pricePxBdr'),
-                             plotOutput('pricePxSqftBdr')),
+                             plotOutput('plotPxBdr'),
+                             plotOutput('plotPxSqftBdr')),
             
             DT::dataTableOutput('tbl')
         )

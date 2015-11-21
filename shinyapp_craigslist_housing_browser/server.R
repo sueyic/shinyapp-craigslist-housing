@@ -147,7 +147,7 @@ shinyServer(function(input, output) {
     })        
     ### Location-specific plots ###
     
-    output$pricePxBdr <- renderPlot({
+    output$plotPxBdr <- renderPlot({
         loc <- location()
         if (loc == "all") {
             g <- NULL
@@ -158,7 +158,7 @@ shinyServer(function(input, output) {
         return (g)
     })
     
-    output$pricePxSqftBdr <- renderPlot({
+    output$plotPxSqftBdr <- renderPlot({
         loc <- location()
         if (loc == "all") {
             g <- NULL
