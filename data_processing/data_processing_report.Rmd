@@ -11,7 +11,7 @@ We wish to build an application that helps a user find out the price and size of
 To do this we are going to obtain recent data from craigslist's "apt/housing" for a few United States cities and use it to train a model to predict price and size.
 
 # Data processing
-It may not be exactly enough data, but lets try doing this with just the 100 most recent posts from each city, as obtained on the evening of November 20 2015.
+It may not be exactly enough data, but lets try doing this with just the 100 most recent posts from each city.
 `get_craigslist_data.R` was used to download the data, and it stored into `data/citiesdf.rds`
 
 Print summary.
