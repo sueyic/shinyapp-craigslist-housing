@@ -1,0 +1,67 @@
+---
+title: "Craigslist apartments"
+author: "Sue Chew"
+date: Nov 21, 2005
+output: pdf_document
+---
+
+# Overview
+We wish to build an application that helps a user find out the price and size of the apartment that the user is likely to get, given a city and the desired number of bedrooms.
+
+To do this we are going to obtain recent data from craigslist's "apt/housing" for a few United States cities and use it to train a model to predict price and size.
+
+# Data processing
+It may not be exactly enough data, but lets try doing this with just the 100 most recent posts from each city, as obtained on the evening of November 20 2015.
+`get_craigslist_data.R` was used to download the data, and it stored into `data/citiesdf.rds`
+
+Print summary.
+```{r}
+citiesdf <- readRDS('data/citiesdf.rds')
+str(citiesdf)
+summary(citiesdf)
+```
+
+# Exploratory plots
+```{r}
+library(ggplot2)
+ggplot(citiesdf, aes(y=price, x=city)) + geom_violin() +
+    labs(title="Price vs City")
+
+ggplot(citiesdf, aes(x=sqft, y=price, color=city)) + geom_point() +
+    labs(title="Price vs Sqft by City")
+
+ggplot(citiesdf, aes(x=bedrooms, fill=as.factor(bedrooms))) + geom_histogram() +
+    coord_flip() + facet_wrap(~ city) +
+    labs(title="Number of Bedrooms per City")
+```
+
+
+# Model training
+`train_models.R` was used to train two models, which are as follows.
+
+| model formula | saved to file |
+|---------------|---------------|
+| price ~ city + bedrooms | data/pricemod.rds |
+| sqft ~ city + bedrooms | data/sqftmod.rds |
+
+```{r}
+pricemod <- readRDS('data/pricemod.rds')
+summary(pricemod)
+
+sqftmod <- readRDS('data/sqftmod.rds')
+summary(sqftmod)
+```
+
+# Check out some predictions
+```{r}
+test <- data.frame(
+    city = rep(c('chicago', 'honolulu', 'kansascity', 'losangeles', 'newyork', 'philadelphia', 'sfbay', 'seattle'), 3),
+    bedrooms = rep(c(1,2,3)))
+test <- test[order(test$city, test$bedrooms),]
+
+# Predict price (USD) and size (sqft).
+cbind(test,
+      predictedPrice=predict(pricemod, newdata = test),
+      predictedSize=predict(sqftmod, newdata = test))
+```
+
