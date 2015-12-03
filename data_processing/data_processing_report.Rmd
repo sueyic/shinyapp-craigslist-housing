@@ -1,7 +1,7 @@
 ---
 title: "Craigslist apartments"
 author: "Sue Chew"
-date: Nov 21, 2005
+date: "Nov 21, 2005"
 output: pdf_document
 ---
 
@@ -22,8 +22,14 @@ summary(citiesdf)
 ```
 
 # Exploratory plots
-```{r}
+
+```{r, warning=FALSE, message=FALSE}
+library(Hmisc)
+library(dplyr)
 library(ggplot2)
+```
+
+```{r}
 ggplot(citiesdf, aes(y=price, x=city)) + geom_violin() +
     labs(title="Price vs City")
 
@@ -33,8 +39,24 @@ ggplot(citiesdf, aes(x=sqft, y=price, color=city)) + geom_point() +
 ggplot(citiesdf, aes(x=bedrooms, fill=as.factor(bedrooms))) + geom_histogram() +
     coord_flip() + facet_wrap(~ city) +
     labs(title="Number of Bedrooms per City")
+
+
+
 ```
 
+Since sqft is not always available, imputing missing values so that we can calculate price per square foot.
+```{r}
+citiesdf.ar <- aregImpute(~ bedrooms + sqft, data=citiesdf, n.impute=1)
+# Create a new data frame with the imputed sqft.
+citiesdf.imp <- citiesdf
+citiesdf.imp$sqft[as.numeric(row.names(citiesdf.ar$imputed$sqft))] <-
+    citiesdf.ar$imputed$sqft
+summcity <- summarise(group_by(citiesdf.imp, city),
+                      avePricePerSqft = sum(price) / sum(sqft))
+ggplot(summcity, aes(x=city, y=avePricePerSqft)) + geom_point(size=3) +
+    ggtitle('Average price per sqft') +
+    geom_hline(aes(yintercept=mean(summcity$avePricePerSqft)), linetype="dashed")
+```
 
 # Model training
 `train_models.R` was used to train two models, which are as follows.
@@ -55,13 +77,28 @@ summary(sqftmod)
 # Check out some predictions
 ```{r}
 test <- data.frame(
-    city = rep(c('chicago', 'honolulu', 'kansascity', 'losangeles', 'newyork', 'philadelphia', 'sfbay', 'seattle'), 3),
-    bedrooms = rep(c(1,2,3)))
+    city = rep(c('chicago', 'honolulu', 'kansascity', 'losangeles', 'newyork',
+                 'philadelphia', 'sfbay', 'seattle'), 4),
+    bedrooms = rep(c(0,1,2,3), each=8))
 test <- test[order(test$city, test$bedrooms),]
 
 # Predict price (USD) and size (sqft).
-cbind(test,
-      predictedPrice=predict(pricemod, newdata = test),
-      predictedSize=predict(sqftmod, newdata = test))
+predictedPrice <- predict(pricemod, newdata = test)
+predictedSize <- predict(sqftmod, newdata = test)
+
+pred <- cbind(test,
+      predictedPrice = round(predictedPrice),
+      predictedSize = round(predictedSize),
+      predictedPricePerSqft = round(predictedPrice/predictedSize, 1))
+
+print(pred, row.names=FALSE)
+
+ggplot(pred, aes(x=bedrooms, y=predictedPrice)) + geom_point() +
+    geom_line() + facet_wrap( ~ city, scales="free_x") +
+    ggtitle("Predicted price vs bedrooms by city")
+
+ggplot(pred, aes(x=bedrooms, y=predictedSize)) + geom_point() +
+    geom_line() + facet_wrap( ~ city, scales="free_x") +
+    ggtitle("Predicted size (sqft) vs bedrooms by city")
 ```
 
