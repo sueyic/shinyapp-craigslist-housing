@@ -9,6 +9,10 @@ bedroomChoices = as.list(1:4)
 
 shinyUI(fluidPage(
 
+    tags$head(
+        tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+    ),
+
     # Application title
     titlePanel("Apartment price and size predictor"),
 
@@ -38,15 +42,15 @@ shinyUI(fluidPage(
             h2('Predictions'),
 
             fluidRow(
-                column(4, div(
+                column(4, div(class="predbox",
                     h4('Predicted price (USD)'),
                     textOutput('predictedPrice')
                 )),
-                column(4, div(
+                column(4, div(class="predbox",
                     h4('Predicted size'),
                     textOutput('predictedSize')
                 )),
-                column(4, div(
+                column(4, div(class="predbox",
                     h4('Predicted price/size'),
                     textOutput('predictedPricePerSize')
                 ))
